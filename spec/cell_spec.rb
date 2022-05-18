@@ -6,12 +6,12 @@ RSpec.describe Cell do
     @cell = Cell.new("B4")
     @cruiser = Ship.new("Cruiser", 3)
   end
-  
+
   describe "#attributes" do
     it "has coordinate" do
       expect(@cell.coordinate).to eq("B4")
     end
-    
+
     it "has a ship default nil" do
       expect(@cell.ship).to be nil
     end
@@ -70,13 +70,13 @@ RSpec.describe Cell do
 
       expect(@cell_1.render).to eq("M")
     end
-    
+
     it "returns 'S' if true is passed in" do
       @cell_2.place_ship(@cruiser)
 
       expect(@cell_2.render(true)).to eq("S")
     end
-    
+
     it "returns 'H' if fire_upon is true and ship is not nil" do
       @cell_2.place_ship(@cruiser)
       @cell_2.fire_upon
@@ -84,7 +84,7 @@ RSpec.describe Cell do
       expect(@cell_2.render).to eq("H")
       expect(@cruiser.sunk?).to be false
     end
-    
+
     it "returns 'X' if fire_upon is true and ship is sunk" do
       @cell_2.place_ship(@cruiser)
       @cell_2.fire_upon
