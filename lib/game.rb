@@ -1,13 +1,14 @@
 require "./lib/board"
 require "./lib/ship"
 require "pry"
-class Game
 
+class Game
   def initialize
+    @board_size = nil
     @cpu_ships = generate_cpu_ships
     @cpu_board = nil
     @player_board = nil
-    @board_size = nil
+    @player_ships = nil
   end
 
   def start
@@ -26,6 +27,8 @@ class Game
 
       place_player_ships
 
+      puts "Preparing boards...for battle!"
+
       turn
 
     elsif play_or_quite == "q"
@@ -34,6 +37,19 @@ class Game
       puts "Invalid choice"
       start
     end
+  end
+
+  def cpu_shot
+    cpu_shot = @player_board.cells.keys.sample(1).join
+
+    unless @player_board.cells[cpu_shot].fire_upon?
+      cpu_shot = @player_board.cells.keys.sample(1).join
+    end
+
+    player_cell = @player_board.cells[cpu_shot]
+    player_cell.fire_upon
+
+    render_shots(cell: player_cell, shot: cpu_shot, pro_noun: ["My", "your"])
   end
 
   def place_cpu_ships(board)
@@ -50,39 +66,42 @@ class Game
 
     @player_board = Board.new(@board_size)
 
-    player_coordinates_input
+    @player_ships = [Ship.new("Submarine", 2), Ship.new("Cruiser", 3)]
 
-    ship = Ship.new("Submarine", 2)
+    @player_ships.each do |ship|
+      player_coordinates_input(ship)
+    end
+  end
+
+  def player_coordinates_input(ship)
+    puts @player_board.render(true)
 
     puts "Enter the squares for the #{ship.name} (#{ship.length} spaces):"
 
-    user_submarine_coordinates = gets.chomp.upcase.split(" ")
+    user_coordinates = gets.chomp.upcase.split(" ")
 
-    until @player_board.valid_placement?(ship, user_submarine_coordinates) do
-       puts "Invalid coordinates, please try again"
-       user_submarine_coordinates = gets.chomp.upcase.split(" ")
+    until @player_board.valid_placement?(ship, user_coordinates) do
+      puts "Invalid coordinates, please try again"
+      user_coordinates = gets.chomp.upcase.split(" ")
     end
 
-    @player_board.place(ship, user_submarine_coordinates)
+    @player_board.place(ship, user_coordinates)
+
     puts @player_board.render(true)
   end
 
-  def player_coordinates_input
-    puts @player_board.render(true)
+  def player_shot
+    player_shot = gets.chomp.upcase
 
-    ship = Ship.new("Cruiser", 3)
-    puts "Enter the squares for the #{ship.name} (#{ship.length} spaces):"
-
-    user_cruiser_coordinates = gets.chomp.upcase.split(" ")
-
-    until @player_board.valid_placement?(ship, user_cruiser_coordinates) do
-       puts "Invalid coordinates, please try again"
-       user_cruiser_coordinates = gets.chomp.upcase.split(" ")
+    until @cpu_board.valid_coordinate?(player_shot) && !@cpu_board.cells[player_shot].fire_upon?
+      puts "Please enter a valid coordinate:"
+      player_shot = gets.chomp.upcase
     end
 
-    @player_board.place(ship, user_cruiser_coordinates)
+    cpu_cell = @cpu_board.cells[player_shot]
+    cpu_cell.fire_upon
 
-    puts @player_board.render(true)
+    render_shots(cell: cpu_cell, shot: player_shot, pro_noun: ["Your", "my"])
   end
 
   def valid_cpu_coordinates(board, ship)
@@ -95,7 +114,6 @@ class Game
     coordinates
   end
 
-
   def generate_cpu_ships
     ships = [["Battleship", 4], ["Cruiser", 3], ["Submarine", 2], ["Destroyer", 2]]
 
@@ -105,8 +123,6 @@ class Game
   end
 
   def turn
-    puts "Preparing boards...for battle!"
-    sleep(2)
     puts "=============COMPUTER BOARD============="
     puts @cpu_board.render
 
@@ -114,37 +130,27 @@ class Game
     puts @player_board.render(true)
 
     puts "Enter the coordinate for your shot:"
-    player_shot = gets.chomp.upcase
 
-    until @cpu_board.valid_coordinate?(player_shot) && !@cpu_board.cells[player_shot].fire_upon?
-      puts "Please enter a valid coordinate:"
-      player_shot = gets.chomp.upcase
+    player_shot
+
+    cpu_shot
+
+    if @cpu_ships.all? { |ship| ship.sunk?}
+      puts "You have won"
+    elsif @player_ships.all? { |ship| ship.sunk?}
+      puts "You have Lost"
+    else
+      turn
     end
+  end
 
-    cpu_shot = @player_board.cells.keys.sample(1).join
-
-    unless @player_board.cells[cpu_shot].fire_upon?
-      cpu_shot = @player_board.cells.keys.sample(1).join
-    end
-
-    @cpu_board.cells[player_shot].fire_upon
-
-    @player_board.cells[cpu_shot].fire_upon
-
-    if @player_board.cells[cpu_shot].render == "X"
-      puts "My shot on #{cpu_shot} sunk your ship"
-    elsif @player_board.cells[cpu_shot].render == "H"
-      puts "My shot on #{cpu_shot} was a hit"
-    elsif @player_board.cells[cpu_shot].render == "M"
-      puts "My shot on #{cpu_shot} was a miss"
-    end
-
-    if @cpu_board.cells[player_shot].render == "X"
-      puts "Your shot on #{player_shot} sunk my ship"
-    elsif @cpu_board.cells[player_shot].render == "H"
-      puts "Your shot on #{player_shot} was a hit"
-    elsif @cpu_board.cells[player_shot].render == "M"
-      puts "Your shot on #{player_shot} was a miss"
+  def render_shots(cell:, shot:, pro_noun:)
+    if cell.render == "X"
+      puts "#{pro_noun[0]} shot on #{shot} sunk #{pro_noun[1]} ship"
+    elsif cell.render == "H"
+      puts "#{pro_noun[0]} shot on #{shot} was a hit"
+    elsif cell.render == "M"
+      puts "#{pro_noun[0]} shot on #{shot} was a miss"
     end
   end
 end
