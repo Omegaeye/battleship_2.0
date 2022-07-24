@@ -14,12 +14,12 @@ class Game
   def start
     puts "Welcome to BATTLESHIP \n"
     puts 'Enter p to play. Enter q to quit'
-    play_or_quite = gets.chomp.downcase
+    play_or_quit = gets.chomp.downcase
 
-    if play_or_quite == 'p'
+    if play_or_quit == 'p'
       puts 'Please enter the board size you want to use minimum 4 to 10'
 
-      @board_size = gets.chomp.to_i
+      get_board_size_from_user
 
       @cpu_board = Board.new(@board_size)
 
@@ -31,11 +31,20 @@ class Game
 
       turn
 
-    elsif play_or_quite == 'q'
+    elsif play_or_quit == 'q'
       puts 'Bye'
     else
       puts 'Invalid choice'
       start
+    end
+  end
+
+  def get_board_size_from_user
+    @board_size = gets.chomp.to_i
+    
+    if !@board_size.between?(4, 10) #DB: these should ideally become variables (ex: !@board_size.between?(nim, max))
+      puts 'Board size must be a number between 4 and 10'
+      get_board_size_from_user
     end
   end
 
