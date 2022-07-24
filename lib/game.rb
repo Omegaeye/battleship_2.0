@@ -14,9 +14,9 @@ class Game
   def start
     puts "Welcome to BATTLESHIP \n"
     puts 'Enter p to play. Enter q to quit'
-    play_or_quite = gets.chomp.downcase
+    play_or_quit = gets.chomp.downcase
 
-    if play_or_quite == 'p'
+    if play_or_quit == 'p'
       puts 'Please enter the board size you want to use minimum 4 to 10'
 
       @board_size = gets.chomp.to_i
@@ -31,7 +31,7 @@ class Game
 
       turn
 
-    elsif play_or_quite == 'q'
+    elsif play_or_quit == 'q'
       puts 'Bye'
     else
       puts 'Invalid choice'
